@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4並べゲーム</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f7f7f7;
+    }
+    h1 {
+      color: #333;
+      margin-top: 20px;
+    }
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(8, 50px);
+      grid-gap: 5px;
+      margin: 20px auto;
+      width: max-content;
+    }
+    .cell {
+      width: 50px;
+      height: 50px;
+      background-color: #eaeaea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 2px solid #ddd;
+    }
+    .player {
+      color: red;
+    }
+    .ai {
+      color: blue;
+    }
+    #menu, #title-screen {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>4並べゲーム</h1>
+  
+  <div id="title-screen">
+    <h2>タイトル画面</h2>
+    <button onclick="startGame()">ゲーム開始</button>
+  </div>
+
+  <div id="game-board"></div>
+
+  <div id="result"></div>
+
+  <script>
+    const board = [
+      ["🔵", "⚪️", "🔴", "⚪️", "⚪️", "🔵", "⚪️", "🔴"],
+      ["⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️"],
+      ["🔴", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "🔵"],
+      ["⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️"],
+      ["⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️"],
+      ["🔵", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "🔴"],
+      ["⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️"],
+      ["🔴", "⚪️", "🔵", "⚪️", "⚪️", "🔴", "⚪️", "🔵"]
+    ];
+
+    const playerSymbol = "🔴";
+    const aiSymbol = "🔵";
+
+    let currentPlayer = playerSymbol;
+
+    function renderBoard() {
+      const gameBoard = document.getElementById("game-board");
+      gameBoard.innerHTML = ""; // Clear current board
+
+      for (let row = 0; row < board.length; row++) {
+        for (let col = 0; col < board[row].length; col++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          if (board[row][col] === "🔴") {
+            cell.classList.add("player");
+          } else if (board[row][col] === "🔵") {
+            cell.classList.add("ai");
+          }
+          cell.innerText = board[row][col];
+          cell.onclick = () => handlePlayerMove(row, col);
+          gameBoard.appendChild(cell);
+        }
+      }
+    }
+
+    function handlePlayerMove(row, col) {
+      if (board[row][col] !== playerSymbol) return; // Can only move player pieces
+
+      const validMoves = getValidMoves(row, col);
+      highlightMoves(validMoves);
+
+      // Await input for where to move (this is simplified for demo)
+      console.log(`Player can move to: ${JSON.stringify(validMoves)}`);
+    }
+
+    function getValidMoves(row, col) {
+      const directions = [
+        [-1, 0], [1, 0], [0, -1], [0, 1],
+        [-1, -1], [1, 1], [-1, 1], [1, -1]
+      ];
+
+      const moves = [];
+      for (const [dx, dy] of directions) {
+        const newRow = row + dx;
+        const newCol = col + dy;
+
+        if (
+          newRow >= 0 &&
+          newRow < board.length &&
+          newCol >= 0 &&
+          newCol < board[newRow].length &&
+          board[newRow][newCol] === "⚪️"
+        ) {
+          moves.push([newRow, newCol]);
+        }
+      }
+      return moves;
+    }
+
+    function highlightMoves(moves) {
+      // Highlight the valid moves on the board
+      console.log(moves);
+    }
+
+    function startGame() {
+      document.getElementById("title-screen").style.display = "none";
+      renderBoard();
+    }
+
+    // Initialize the game
+    window.onload = () => {
+      document.getElementById("title-screen").style.display = "block";
+    };
+  </script>
+</body>
+</html>

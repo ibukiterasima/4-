@@ -1,147 +1,144 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>4並べゲーム</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      background-color: #f7f7f7;
-    }
-    h1 {
-      color: #333;
-      margin-top: 20px;
-    }
-    #game-board {
-      display: grid;
-      grid-template-columns: repeat(8, 50px);
-      grid-gap: 5px;
-      margin: 20px auto;
-      width: max-content;
-    }
-    .cell {
-      width: 50px;
-      height: 50px;
-      background-color: #eaeaea;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      cursor: pointer;
-      border: 2px solid #ddd;
-    }
-    .player {
-      color: red;
-    }
-    .ai {
-      color: blue;
-    }
-    #menu, #title-screen {
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コマ移動盤</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#f0f0f0;
+    font-family:sans-serif;
+}
+
+#board{
+    width:min(96vw,96vh);
+    height:min(96vw,96vh);
+
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    grid-template-rows:repeat(8,1fr);
+
+    gap:2px;
+    background:#333;
+    padding:2px;
+}
+
+.cell{
+    background:white;
+    position:relative;
+}
+
+.piece{
+    width:80%;
+    height:80%;
+    border-radius:50%;
+    position:absolute;
+    left:10%;
+    top:10%;
+}
+
+.red{
+    background:#e53935;
+}
+
+.blue{
+    background:#1e88e5;
+}
+
+.selected{
+    outline:6px solid gold;
+    outline-offset:2px;
+}
+</style>
 </head>
 <body>
-  <h1>4並べゲーム</h1>
-  
-  <div id="title-screen">
-    <h2>タイトル画面</h2>
-    <button onclick="startGame()">ゲーム開始</button>
-  </div>
 
-  <div id="game-board"></div>
+<div id="board"></div>
 
-  <div id="result"></div>
+<script>
 
-  <script>
-    const board = [
-      ["🔵", "⚪️", "🔴", "⚪️", "⚪️", "🔵", "⚪️", "🔴"],
-      ["⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️"],
-      ["🔴", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "🔵"],
-      ["⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️"],
-      ["⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️"],
-      ["🔵", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "🔴"],
-      ["⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️", "⚪️"],
-      ["🔴", "⚪️", "🔵", "⚪️", "⚪️", "🔴", "⚪️", "🔵"]
-    ];
+const startBoard = [
+["B","","R","","","B","","R"],
+["","","","","","","",""],
+["R","","","","","","","B"],
+["","","","","","","",""],
+["","","","","","","",""],
+["B","","","","","","","R"],
+["","","","","","","",""],
+["R","","B","","","R","","B"]
+];
 
-    const playerSymbol = "🔴";
-    const aiSymbol = "🔵";
+const board = document.getElementById("board");
 
-    let currentPlayer = playerSymbol;
+let selectedPiece = null;
 
-    function renderBoard() {
-      const gameBoard = document.getElementById("game-board");
-      gameBoard.innerHTML = ""; // Clear current board
+function createPiece(color){
 
-      for (let row = 0; row < board.length; row++) {
-        for (let col = 0; col < board[row].length; col++) {
-          const cell = document.createElement("div");
-          cell.className = "cell";
-          if (board[row][col] === "🔴") {
-            cell.classList.add("player");
-          } else if (board[row][col] === "🔵") {
-            cell.classList.add("ai");
-          }
-          cell.innerText = board[row][col];
-          cell.onclick = () => handlePlayerMove(row, col);
-          gameBoard.appendChild(cell);
+    const piece = document.createElement("div");
+    piece.className = "piece " + color;
+
+    piece.addEventListener("click",(e)=>{
+
+        e.stopPropagation();
+
+        document
+            .querySelectorAll(".piece")
+            .forEach(p=>p.classList.remove("selected"));
+
+        selectedPiece = piece;
+        piece.classList.add("selected");
+    });
+
+    return piece;
+}
+
+for(let y=0;y<8;y++){
+
+    for(let x=0;x<8;x++){
+
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        if(startBoard[y][x] === "R"){
+            cell.appendChild(createPiece("red"));
         }
-      }
-    }
 
-    function handlePlayerMove(row, col) {
-      if (board[row][col] !== playerSymbol) return; // Can only move player pieces
-
-      const validMoves = getValidMoves(row, col);
-      highlightMoves(validMoves);
-
-      // Await input for where to move (this is simplified for demo)
-      console.log(`Player can move to: ${JSON.stringify(validMoves)}`);
-    }
-
-    function getValidMoves(row, col) {
-      const directions = [
-        [-1, 0], [1, 0], [0, -1], [0, 1],
-        [-1, -1], [1, 1], [-1, 1], [1, -1]
-      ];
-
-      const moves = [];
-      for (const [dx, dy] of directions) {
-        const newRow = row + dx;
-        const newCol = col + dy;
-
-        if (
-          newRow >= 0 &&
-          newRow < board.length &&
-          newCol >= 0 &&
-          newCol < board[newRow].length &&
-          board[newRow][newCol] === "⚪️"
-        ) {
-          moves.push([newRow, newCol]);
+        if(startBoard[y][x] === "B"){
+            cell.appendChild(createPiece("blue"));
         }
-      }
-      return moves;
-    }
 
-    function highlightMoves(moves) {
-      // Highlight the valid moves on the board
-      console.log(moves);
-    }
+        cell.addEventListener("click",()=>{
 
-    function startGame() {
-      document.getElementById("title-screen").style.display = "none";
-      renderBoard();
-    }
+            if(!selectedPiece) return;
 
-    // Initialize the game
-    window.onload = () => {
-      document.getElementById("title-screen").style.display = "block";
-    };
-  </script>
+            const existing = cell.querySelector(".piece");
+
+            if(existing){
+                existing.remove();
+            }
+
+            cell.appendChild(selectedPiece);
+
+            selectedPiece.classList.remove("selected");
+            selectedPiece = null;
+        });
+
+        board.appendChild(cell);
+    }
+}
+
+</script>
+
 </body>
 </html>
